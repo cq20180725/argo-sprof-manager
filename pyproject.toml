@@ -33,9 +33,6 @@ preview = [
     "xarray",
     "netCDF4",
 ]
-test = [
-    "pytest",
-]
 
 [project.scripts]
 argo-sprof-manager = "argo_sprof_manager.cli:main"

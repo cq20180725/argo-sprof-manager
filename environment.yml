@@ -10,6 +10,5 @@ dependencies:
   - certifi
   - xarray
   - netcdf4
-  - pytest
   - pip:
       - -e .

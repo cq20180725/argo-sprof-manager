@@ -34,7 +34,7 @@ This is an unofficial helper tool. Data are downloaded from the Argo GDAC index 
 argo-sprof-manager/
   .github/
     workflows/
-      tests.yml
+      package-smoke-check.yml
   .gitignore
   CITATION.cff
   CHANGELOG.md
@@ -97,11 +97,11 @@ argo-sprof-manager --port 8502
 
 If the requested port is already busy, the CLI automatically switches to the next available port.
 
-## GitHub Repository Setup
+## Repository
 
-Use this directory as the repository root. Do not publish a parent research workspace that contains raw data, downloaded NetCDF files, logs, or unrelated scripts.
+Source code and issue tracking are available at `https://github.com/cq20180725/argo-sprof-manager`.
 
-Repository metadata is set for `https://github.com/cq20180725/argo-sprof-manager`.
+The repository is intended to contain application source code, packaging metadata, documentation, and utility scripts. Downloaded Argo data files, logs, cache files, and output directories are ignored by Git.
 
 ## Dependencies
 
@@ -119,18 +119,16 @@ Optional NetCDF preview dependencies:
 pip install -e ".[preview]"
 ```
 
-## Tests
+## Validation
 
-The public repository does not include the local test-program folder. Before publishing, validate the project from a working copy that still contains the local tests.
-
-Run the full release check before publishing or moving the package to another computer:
+Run the package validation check:
 
 ```powershell
 cd "C:\path\to\argo-sprof-manager"
 python scripts\release_check.py
 ```
 
-When a local `tests/` directory exists, `release_check.py` also runs the pytest suite. When `tests/` is absent, it skips pytest and still compiles the package, builds a wheel, installs the wheel into a temporary virtual environment, runs `pip check` in that clean environment, checks the CLI entry point, starts the web app, and verifies the local HTTP page responds.
+The release check compiles the package, builds a wheel, installs the wheel into a temporary virtual environment, runs `pip check`, checks the CLI entry point, starts the web app, and verifies that the local HTTP page responds.
 
 Run a basic syntax check manually:
 
@@ -138,28 +136,13 @@ Run a basic syntax check manually:
 python -m compileall -q src scripts
 ```
 
-The local validation suite covers:
-
-- synthetic-profile index parsing and inventory generation
-- mocked network and HTTP boundary behavior, including SSL fallback, 404, missing content length, incomplete reads, and partial-file cleanup
-- Windows non-ASCII path handling for local NetCDF preview
-- output directory health checks and cleanup helpers
-- manifest reading and unfinished-download detection
-- pause, resume, cancel, and manifest writing for background downloads
-- background remote-size estimates, cancellation, sample projection, and per-file failures
-- CLI port handling
-- WMO parsing, inventory filtering, retry/resume candidate selection
-- remote-size estimate mode selection: all rows, first N rows, and random sample N rows
-- Streamlit page initialization, language switching, size-estimate controls, and completed estimate result panel rendering
-- large synthetic inventory filtering and estimate-row selection
-
-For a faster local-only release check that reuses the current environment packages:
+To reuse the active Python environment packages during validation:
 
 ```powershell
 python scripts\release_check.py --use-system-site-packages
 ```
 
-Live network checks against the real Argo GDAC service should be run manually before an important release, because they depend on proxy settings, network state, and remote server availability:
+To verify live connectivity to the Argo GDAC service:
 
 ```powershell
 python scripts\live_network_check.py
@@ -187,88 +170,75 @@ Argo (2000). Argo float data and metadata from Global Data Assembly Centre (Argo
 
 For reproducible publications, use the specific monthly Argo snapshot DOI when appropriate, as described by the official Argo acknowledgement page.
 
-## Version Iteration History
+## Feature History
 
-This section records the functional evolution of the tool. It is organized by iteration stage.
+This section summarizes major capabilities.
 
 See `CHANGELOG.md` for release notes.
 
-### Script Prototype
+### Downloader Core
 
-- Started from a command-line Python downloader for global Argo Sprof files.
-- Downloaded the latest `argo_synthetic-profile_index.txt` from Argo GDAC.
-- Parsed the synthetic-profile index and generated a float-level inventory.
-- Downloaded `*_Sprof.nc` files into a local output directory.
-- Added retry logic and SSL certificate fallback for proxy or local certificate environments.
+- Fetches the latest `argo_synthetic-profile_index.txt` from Argo GDAC.
+- Parses the synthetic-profile index into a float-level inventory.
+- Downloads `*_Sprof.nc` files with retry logic and partial-file cleanup.
+- Supports certificate fallback for proxy or local certificate environments when needed.
 
-### Streamlit Web Prototype
+### Web Interface
 
-- Added a local Streamlit interface for browsing Argo Sprof inventory data.
-- Added filters for DAC, WMO, variables, text search, and variable match mode.
-- Added single-float download, filtered-result download, and full-inventory download actions.
-- Added map preview when latitude and longitude are available in the index.
-- Changed the app to refresh the latest remote index instead of relying on old local inventory files.
+- Provides a local Streamlit interface named `Argo Sprof Download Manager`.
+- Refreshes the latest remote index from the app.
+- Filters inventory rows by DAC, WMO list, variables, text query, and variable matching mode.
+- Supports single-float, filtered-result, and full-inventory download actions.
+- Shows a map preview when latitude and longitude are available in the index.
+- Lets users choose the download directory explicitly.
 
-### All-Variable Download Manager
+### Packaging and Distribution
 
-- Renamed the interface to `Argo Sprof Download Manager`.
-- Changed the app from BGC-only thinking to all available Sprof variables.
-- Added variable selection based on the latest index contents.
-- Kept the output directory empty on app startup so users explicitly choose where files are saved.
-- Added a refresh hint so users know loading the full remote index can take time.
-
-### Package Structure
-
-- Converted `web_code` into a standard Python package with a `src/` layout.
-- Added `pyproject.toml` with package metadata and dependencies.
-- Added CLI entry points: `argo-sprof-manager` and `argo-sprof-web`.
-- Added `python -m argo_sprof_manager` support.
-- Added `requirements.txt`, `environment.yml`, and `LICENSE`.
-- Removed low-value compatibility wrapper files from the project root.
+- Uses a standard Python `src/` package layout.
+- Defines package metadata and dependencies in `pyproject.toml`.
+- Provides CLI entry points: `argo-sprof-manager`, `argo-sprof-web`, and `python -m argo_sprof_manager`.
+- Includes `requirements.txt`, `environment.yml`, `LICENSE`, `CHANGELOG.md`, and `CITATION.cff`.
+- Includes GitHub Actions package smoke checks for Python 3.10 and 3.11.
 
 ### Download Task Management
 
-- Moved long batch downloads into a background job manager.
-- Added pause, resume, and cancel controls for long downloads.
-- Added active job status, progress, submitted/completed counters, and recent log lines.
-- Added `download_manifest.csv` writing during the task, not only after completion.
-- Added retry failed / incomplete items.
-- Added resume unfinished items from an existing manifest.
+- Runs long batch downloads through a background job manager.
+- Provides pause, resume, and cancel controls for long downloads.
+- Shows active job status, progress, submitted/completed counters, and recent log lines.
+- Writes `download_manifest.csv` during the task.
+- Supports retrying failed or incomplete items and resuming unfinished manifest entries.
 
 ### Diagnostics and Cleanup
 
-- Added runtime diagnostics for Python, package versions, and executable path.
-- Added network connection testing for the index URL.
-- Added output directory health checks: write access, free space, non-ASCII path warning, partial files, and too-small Sprof files.
-- Added cleanup actions for `.part` files, too-small Sprof files, and NetCDF preview cache.
-- Added failure category classification for easier troubleshooting.
+- Shows runtime diagnostics for Python, package versions, and executable path.
+- Tests network access to the index URL.
+- Checks output directory health, including write access, free space, non-ASCII path warnings, partial files, and too-small Sprof files.
+- Cleans `.part` files, too-small Sprof files, and NetCDF preview cache files.
+- Classifies failure categories for easier troubleshooting.
 
 ### Background Remote-Size Estimation
 
-- Moved remote total-size estimation out of the synchronous Streamlit page run and into a background task.
-- Added a local-refresh estimate panel using Streamlit fragments, so other tabs remain usable while estimation is running.
-- Added cancel and clear controls for remote-size estimates.
-- Added three estimate scopes: all filtered rows, first N rows, and random sample N rows.
-- Added sample-based projected full total using successful sample responses.
-- Kept per-file failures in the result table instead of failing the whole estimate.
+- Runs remote total-size estimation in a background task.
+- Keeps other tabs usable while estimation is running.
+- Provides cancel and clear controls for remote-size estimates.
+- Supports three estimate scopes: all filtered rows, first N rows, and random sample N rows.
+- Projects full totals from successful random-sample responses.
+- Keeps per-file failures in the result table instead of failing the whole estimate.
 
 ### Windows Path Stability
 
-- Improved local NetCDF preview behavior on Windows paths containing Chinese or other non-ASCII characters.
-- Added a fallback that copies files to a temporary ASCII-only preview path when the NetCDF backend cannot open the original path.
-- Added README troubleshooting guidance recommending ASCII-only output directories for large-scale work.
+- Improves local NetCDF preview behavior on Windows paths containing Chinese or other non-ASCII characters.
+- Copies files to a temporary ASCII-only preview path when the NetCDF backend cannot open the original path.
+- Recommends ASCII-only output directories for large-scale work.
 
-### Stability and Usability Hardening
+### Stability and Usability
 
-- Added progress feedback while estimating remote total size for the current filtered result.
-- Made remote-size estimation continue even if one file probe fails.
-- Made empty remote-size estimation return stable table columns.
-- Made retry-candidate detection tolerant of old or malformed result tables.
-- Added `Content-Length` validation to file downloads, so incomplete network transfers are retried and partial files are removed.
-- Expanded local tests for app helper functions, filtering, manifest resume logic, background download jobs, background size-estimate jobs, mocked network failures, large synthetic inventories, and Streamlit rendering.
-- Added a release-check script that builds a wheel, installs it into a temporary virtual environment, verifies CLI entry points, and starts the web app for an HTTP smoke test.
-- Added a live-network check script for manual Argo GDAC connectivity checks before important releases.
-- Verified package entry points, editable package metadata, wheel build, isolated wheel install, Streamlit page initialization, and real local HTTP startup.
+- Shows progress feedback while estimating remote total size for the current filtered result.
+- Continues remote-size estimation when individual file probes fail.
+- Returns stable table columns for empty remote-size estimates.
+- Handles old or malformed result tables when detecting retry candidates.
+- Validates `Content-Length` during downloads, retries incomplete transfers, and removes partial files.
+- Provides package smoke checks and live Argo GDAC connectivity checks.
 
 ## Troubleshooting
 

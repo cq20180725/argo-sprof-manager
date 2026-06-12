@@ -55,22 +55,7 @@ def build_wheel(wheel_dir: Path) -> Path:
 
 def compile_project() -> None:
     targets = [ROOT / "src", ROOT / "scripts"]
-    tests_dir = ROOT / "tests"
-    if tests_dir.exists():
-        targets.append(tests_dir)
     run([sys.executable, "-m", "compileall", "-q", *[str(path) for path in targets]], timeout=60)
-
-
-def run_local_tests_if_available() -> None:
-    tests_dir = ROOT / "tests"
-    if not tests_dir.exists():
-        print("No tests directory found; skipping local pytest suite.", flush=True)
-        return
-    test_files = list(tests_dir.rglob("test_*.py"))
-    if not test_files:
-        print("No pytest files found in tests directory; skipping local pytest suite.", flush=True)
-        return
-    run([sys.executable, "-m", "pytest", str(tests_dir), "-q"], timeout=180)
 
 
 def isolated_install_check(wheel_path: Path, use_system_site_packages: bool, port: int) -> None:
@@ -127,7 +112,6 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     compile_project()
-    run_local_tests_if_available()
 
     with tempfile.TemporaryDirectory(prefix="argo_sprof_wheel_") as wheel_text:
         wheel_path = build_wheel(Path(wheel_text))

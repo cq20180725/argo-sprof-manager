@@ -12,5 +12,5 @@ Initial public release.
 - Added output directory diagnostics, cleanup tools, network diagnostics, and optional NetCDF preview.
 - Added Windows non-ASCII path fallback for NetCDF preview.
 - Added CLI entry points: `argo-sprof-manager`, `argo-sprof-web`, and `python -m argo_sprof_manager`.
-- Added release checks, live Argo GDAC network checks, and local automated tests for release validation.
+- Added release checks and live Argo GDAC network checks.
 - Added Argo data acknowledgement and citation guidance.
