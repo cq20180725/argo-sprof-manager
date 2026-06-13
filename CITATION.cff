@@ -5,7 +5,7 @@ version: "1.0.0"
 type: software
 authors:
   - name: "Argo Sprof Manager Contributors"
-repository-code: "https://github.com/cq20180725/argo-sprof-manager"
+repository-code: "https://github.com/Q-Ch3n/argo-sprof-manager"
 license: "MIT"
 keywords:
   - Argo

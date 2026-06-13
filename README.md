@@ -104,7 +104,7 @@ If the requested port is already busy, the CLI automatically switches to the nex
 
 ## Repository
 
-Source code and issue tracking are available at `https://github.com/cq20180725/argo-sprof-manager`.
+Source code and issue tracking are available at `https://github.com/Q-Ch3n/argo-sprof-manager`.
 
 The repository is intended to contain application source code, packaging metadata, documentation, and utility scripts. Downloaded Argo data files, logs, cache files, and output directories are ignored by Git.
 
